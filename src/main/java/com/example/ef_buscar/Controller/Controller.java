@@ -12,24 +12,33 @@ import java.util.List;
 @org.springframework.stereotype.Controller
 @RestController
 public class Controller {
-    final EmployeeDao employeeDao;
 
-    public Controller(EmployeeDao employeeDao) {
-        this.employeeDao = employeeDao;
-
-    }
+    @Autowired
+    private EmployeeDao employeeDao;
 
     @GetMapping("/rh/buscarempleado/{letra}/{order}")
     public List<Employee> obtenerPorId(@PathVariable("letra") String letra,@PathVariable("order") String order ){
 
             List<Employee> listaEmployee = employeeDao.buscar(order);
-            for(int i=0;i<listaEmployee.size();i++){
 
+        List<Employee> empleadosFiltrados = listaEmployee.stream()
+                .filter(employee -> employee.getFirstName().startsWith(letra))
+                .sorted((e1, e2) -> {
+                    // Ordenar en forma descendente según el campo especificado
+                    switch (order.toLowerCase()) {
+                        case "firstname":
+                            return e2.getFirstName().compareTo(e1.getFirstName());
+                        case "lastname":
+                            return e2.getLastName().compareTo(e1.getLastName());
+                        case "email":
+                            return e2.getEmail().compareTo(e1.getEmail());
+                        default:
+                            throw new IllegalArgumentException("Campo de orden no válido: " + order);
+                    }
+                })
+                .toList();
 
-
-            }
-
-            return null;
+        return empleadosFiltrados;
     }
 
 
